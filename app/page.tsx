@@ -15,8 +15,8 @@ import { Play, RotateCcw, Volume2, VolumeX, Share2, Twitter, Facebook, MessageCi
 // The JSX.IntrinsicElements error is also fixed by installing @types/react
 
 // Game constants
-const INITIAL_FALL_SPEED = 4000 // milliseconds (slower start)
-const SPEED_INCREASE_RATE = 0.92 // multiply by this each level (more gradual)
+const INITIAL_FALL_SPEED = 6000 // milliseconds (slower start)
+const SPEED_INCREASE_RATE = 0.97 // multiply by this each level (more gradual)
 const POINTS_PER_WORD = 10
 const LEVEL_UP_THRESHOLD = 5 // words per level
 
@@ -631,7 +631,7 @@ export default function QuickTypeClash() {
   setFallingWords((prev: FallingWord[]) => {
     const updated = prev.map((word: FallingWord) => ({
       ...word,
-      y: word.y + (100 / word.speed) * 12,
+      y: word.y + (100 / word.speed) * 6,
     }))
 
     const newWords = updated.filter((word: FallingWord) => word.y < 85)
