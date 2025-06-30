@@ -554,6 +554,8 @@ export default function QuickTypeClash() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [gameStartTime, setGameStartTime] = useState<number>(0)
   const [gameEndTime, setGameEndTime] = useState<number>(0)
+  const [chances, setChances] = useState(3)
+
   // Add this state for image generation
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
 
@@ -624,26 +626,34 @@ export default function QuickTypeClash() {
 
   // Update falling words positions
   const updateWords = useCallback(() => {
-    if (gameState !== "playing") return
+  if (gameState !== "playing") return
 
-    setFallingWords((prev: FallingWord[]) => {
-      const updated = prev.map((word: FallingWord) => ({
-        ...word,
-        y: word.y + (100 / word.speed) * 12, // Slower movement calculation
-      }))
+  setFallingWords((prev: FallingWord[]) => {
+    const updated = prev.map((word: FallingWord) => ({
+      ...word,
+      y: word.y + (100 / word.speed) * 12,
+    }))
 
-      // Check for words that reached the bottom
-      const reachedBottom = updated.some((word: FallingWord) => word.y >= 85)
-      if (reachedBottom) {
+    const newWords = updated.filter((word: FallingWord) => word.y < 85)
+    const missedWords = updated.length - newWords.length
+
+    if (missedWords > 0) {
+      setChances((prev) => {
+        const newChances = prev - missedWords
+        if (newChances <= 0) {
+          playSound("fail")
+          setGameState("gameOver")
+          setGameEndTime(Date.now())
+          return 0
+        }
         playSound("fail")
-        setGameState("gameOver")
-        setGameEndTime(Date.now())
-        return []
-      }
+        return newChances
+      })
+    }
 
-      return updated.filter((word: FallingWord) => word.y < 85)
-    })
-  }, [gameState, playSound])
+    return newWords
+  })
+}, [gameState, playSound])
 
   // Handle word typing
   const handleWordType = useCallback(
@@ -663,6 +673,9 @@ export default function QuickTypeClash() {
           setFallSpeed((prev: number) => Math.max(prev * SPEED_INCREASE_RATE, 1200)) // Minimum speed limit
         }
       }
+      else{
+        setCurrentInput("")
+      }
     },
     [fallingWords, level, wordsTyped, playSound],
   )
@@ -678,6 +691,8 @@ export default function QuickTypeClash() {
     setFallSpeed(INITIAL_FALL_SPEED)
     setGameStartTime(Date.now())
     setGameEndTime(0)
+    setChances(3)
+
 
     // Focus input
     setTimeout(() => inputRef.current?.focus(), 100)
@@ -1010,6 +1025,9 @@ export default function QuickTypeClash() {
             </Badge>
             <Badge variant="secondary" className="text-base px-3 py-2 bg-black/50 text-white">
               Words: {wordsTyped}
+            </Badge>
+            <Badge variant="secondary" className="text-base px-3 py-2 bg-black/50 text-white">
+              Lives: {chances}
             </Badge>
           </div>
           <Button
